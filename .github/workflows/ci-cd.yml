@@ -1,0 +1,91 @@
+# TODO: Draft for build a CI/CD pipeline with AWS (ECR, API Gateway, Cognito)
+
+# name: CI/CD Pipeline
+
+# on:
+#   push:
+#     branches:
+#       - main
+#   pull_request:
+#     branches:
+#       - main
+
+# jobs:
+#   build-and-test:
+#     runs-on: ubuntu-latest
+#     services:
+#       docker:
+#         image: docker:19.03.12
+#         options: --privileged
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v2
+
+#       - name: Set up Docker Compose
+#         run: |
+#           docker-compose -f docker-compose.yml up -d
+
+#       - name: Set up Python
+#         uses: actions/setup-python@v2
+#         with:
+#           python-version: '3.12'
+
+#       - name: Install dependencies
+#         run: |
+#           pip install -r requirements.txt
+
+#       - name: Run unit tests
+#         run: |
+#           pip install pytest
+#           pytest tests/unit
+
+#       - name: Run integration tests with service dependencies
+#         run: |
+#           pytest tests/integration
+
+#       - name: Shutdown Docker Compose
+#         run: |
+#           docker-compose -f docker-compose.yml down
+
+#       - name: Lint with flake8
+#         run: |
+#           pip install flake8
+#           flake8 ./app
+
+#       - name: Build Docker image
+#         run: docker build -t my-app:${{ github.sha }} .
+
+#       - name: Push Docker image to ECR
+#         uses: aws-actions/amazon-ecr-login@v1
+#         run: |
+#           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ECR_REPOSITORY }}
+#           docker tag my-app:${{ github.sha }} ${{ secrets.AWS_ECR_REPOSITORY }}:latest
+#           docker push ${{ secrets.AWS_ECR_REPOSITORY }}:latest
+
+#   blue-green-deploy:
+#     needs: build-and-test
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Deploy to ECS with blue-green deployment
+#         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+#         with:
+#           service: my-service
+#           cluster: my-cluster
+#           image: ${{ secrets.AWS_ECR_REPOSITORY }}:latest
+#           region: ${{ secrets.AWS_REGION }}
+#           wait-for-service-stability: true
+#           codedeploy-appspec: 'appspec.yaml'
+#           codedeploy-application: 'my-codedeploy-application'
+#           codedeploy-deployment-group: 'my-deployment-group'
+
+#       - name: Health check
+#         run: |
+#           curl --retry 5 --retry-delay 10 --retry-connrefused http://currency-converter-api/ || exit 1
+
+#       - name: Update API Gateway
+#         run: |
+#           # Commands for update AWS API Gateway.
+
+#       - name: Update AWS Cognito Settings
+#         run: |
+#           # Commands for update de AWS Cognito.

@@ -1,0 +1,35 @@
+[flake8]
+exclude =
+    requirements.txt,
+    .git,
+    __pycache__,
+    env,
+    venv,
+    .venv,
+    migrations,
+    old,
+    build,
+    dist,
+    logs
+
+max-line-length = 79
+max-complexity = 10
+
+select = C,E,F,W,B,B950
+ignore = E501,W503
+
+docstring-convention = google
+
+suppress-none-returning = true
+suppress-dummy-args = true
+require-parameter-hints = true
+require-return-hints = true
+
+plugins = flake8-annotations
+
+extend-ignore =
+    D100,
+    D104,
+
+per-file-ignores =
+    app/main.py: E402
