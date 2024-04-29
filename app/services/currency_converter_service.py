@@ -1,10 +1,10 @@
-import logging
 import requests
 from pybreaker import CircuitBreakerError
 
 from core.utils import Utils
 from core.cache import RedisCache
 from core.settings import API_URL, API_ACCESS_KEY, REDIS_RATE_KEY_PREFIX
+from core.logger import Logger
 from core.http_circuit_breaker import HttpCircuitBreaker
 from schemas.currency_conversion_rates_schema import CurrencyConversionRatesSchema
 
@@ -19,7 +19,7 @@ class CurrencyConverterService:
             self,
             *currencies: str
     ) -> CurrencyConversionRatesSchema:
-        logging.info(f"Get currency conversion rates for currencies {currencies}")
+        Logger.info(f"Get currency conversion rates for currencies {currencies}")
 
         result: CurrencyConversionRatesSchema = CurrencyConversionRatesSchema()
         all_conversion_rates = None
@@ -42,7 +42,7 @@ class CurrencyConverterService:
         return result
 
     async def __cache_rates(self, conversion_rates: CurrencyConversionRatesSchema):
-        logging.info("Save currency conversion rates data in cache")
+        Logger.info("Saving currency conversion rates data in cache")
 
         exp_seconds = Utils.seconds_until_next_day()
         for currency_name, rate_value in conversion_rates.rates.items():
@@ -56,13 +56,13 @@ class CurrencyConverterService:
                 break
 
     def __fetch_all_conversion_rates(self) -> CurrencyConversionRatesSchema:
-        logging.info('Start fetching all currency conversion rates')
+        Logger.info('Start fetching all currency conversion rates')
 
         try:
             result = HttpCircuitBreaker().fetch_data(
                 self.api_url, params={"access_key": self.access_key}
             )
-            logging.info('Successfully fetched all currency conversion rates')
+            Logger.info('Successfully fetched all currency conversion rates')
         except CircuitBreakerError:
             print("Exchange Rates API currently unavailable.")
         except requests.exceptions.RequestException as e:

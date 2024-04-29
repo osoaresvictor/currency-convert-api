@@ -9,6 +9,7 @@ services:
       - productionNetwork
     depends_on:
       - redis
+      - loki
     environment:
       - SERVER_HOST=http://fastapi
       - SERVER_PORT=8000
@@ -18,6 +19,9 @@ services:
       - REDIS_DB=0
       - API_URL=
       - API_ACCESS_KEY=
+      - LOKI_URL=http://localhost:3100
+      - LOKI_USER=
+      - LOKI_PASSWORD=
 
   redis:
     image: redis:latest
@@ -27,6 +31,11 @@ services:
       - "6379:6379"
     networks:
       - productionNetwork
+  
+  loki:
+    image: grafana/loki:3.0.0
+    ports:
+      - "3100:3100"
 
 networks:
   productionNetwork:

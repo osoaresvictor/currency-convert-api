@@ -3,6 +3,7 @@ pybreaker==1.2.0
 pydantic==2.7.1
 pytest==8.1.2
 python-dotenv==1.0.1
+python_logging_loki==0.3.1
 redis==5.0.4
 Requests==2.31.0
 SQLAlchemy==2.0.29

@@ -5,11 +5,7 @@ from fastapi import FastAPI
 from core.database import Base, Database
 from controller.routes import api_router
 from core.settings import SERVER_HOST, SERVER_PORT
-import logging
 
-logging.basicConfig(filename='audit.log', level=logging.INFO)
-
-logging.info("Creating database")
 db = Database()
 Base.metadata.create_all(bind=db.engine)
 

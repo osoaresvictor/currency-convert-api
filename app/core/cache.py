@@ -1,5 +1,5 @@
 from core.settings import REDIS_HOST, REDIS_PORT, REDIS_DB
-import logging
+from core.logger import Logger
 import redis.asyncio as redis
 
 
@@ -20,7 +20,7 @@ class RedisCache:
         try:
             await self.connection.set(name=key, value=value, ex=exp_seconds)
         except redis.RedisError as e:
-            logging.error(f"Redis error: {e}")
+            Logger.error(f"Redis error: {e}")
             return False
         return True
 
@@ -28,5 +28,5 @@ class RedisCache:
         try:
             return await self.connection.get(key)
         except redis.RedisError as e:
-            logging.error(f"Redis error: {e}")
+            Logger.error(f"Redis error: {e}")
             return None
