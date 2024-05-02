@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
-from models.currency_conversions_model import CurrencyConversionsModel
+from app.models.currency_conversions_model import CurrencyConversionsModel
 from datetime import datetime
 
 
@@ -11,17 +11,17 @@ class CurrencyConversionsRepository:
     def add_currency_conversion(
         self,
         user_id: str,
-        source_currency: str,
+        source_currency_code: str,
         source_currency_value: float,
-        target_currency: str,
+        target_currency_code: str,
         rate_value: float,
         datetime: datetime
     ) -> CurrencyConversionsModel:  # pragma: no cover
         new_conversion = CurrencyConversionsModel(
             user_id=user_id,
-            source_currency=source_currency,
+            source_currency_code=source_currency_code,
             source_currency_value=source_currency_value,
-            target_currency=target_currency,
+            target_currency_code=target_currency_code,
             rate_value=rate_value,
             datetime=datetime
         )

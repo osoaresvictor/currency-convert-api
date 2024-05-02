@@ -1,13 +1,13 @@
-from core.settings import REDIS_HOST, REDIS_PORT, REDIS_DB
-from core.logger import Logger
+from app.core.settings import Settings
+from app.core.logger import Logger
 import redis.asyncio as redis
 
 
 class RedisCache:
-    def __init__(self, host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB):
-        self.__host = host
-        self.__port = port
-        self.__db = db
+    def __init__(self):
+        self.__host = Settings.REDIS_HOST
+        self.__port = Settings.REDIS_PORT
+        self.__db = Settings.REDIS_DB
 
         pool = redis.ConnectionPool(
             host=self.__host,

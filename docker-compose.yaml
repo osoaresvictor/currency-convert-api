@@ -11,9 +11,7 @@ services:
       - redis
       - loki
     environment:
-      - SERVER_HOST=http://fastapi
-      - SERVER_PORT=8000
-      - DATABASE_URL=sqlite:///../currency_conversion.db
+      - DATABASE_URL=sqlite:///./currency_conversion.db
       - REDIS_HOST=http://redis
       - REDIS_PORT=6379
       - REDIS_DB=0
@@ -24,7 +22,7 @@ services:
       - LOKI_PASSWORD=
 
   redis:
-    image: redis:latest
+    image: redis:7.2.4
     command: redis-server --appendonly yes
     container_name: redis
     ports:
@@ -36,6 +34,13 @@ services:
     image: grafana/loki:3.0.0
     ports:
       - "3100:3100"
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    depends_on:
+      - loki
+    ports:
+      - "3000:3000"
 
 networks:
   productionNetwork:

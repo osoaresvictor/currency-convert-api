@@ -1,7 +1,7 @@
 import logging
 import logging_loki
-from core.singleton import SingletonMeta
-from core.settings import LOKI_URL, LOKI_USER, LOKI_PASSWORD
+from app.core.singleton import SingletonMeta
+from app.core.settings import Settings
 
 
 class Logger(metaclass=SingletonMeta):
@@ -16,9 +16,9 @@ class Logger(metaclass=SingletonMeta):
             cls.logger.setLevel(logging.INFO)
 
             handler = logging_loki.LokiHandler(
-                url=f"{LOKI_URL}/loki/api/v1/push",
+                url=f"{Settings.LOKI_URL}/loki/api/v1/push",
                 tags={"application": "my-app"},
-                auth=(LOKI_USER, LOKI_PASSWORD),
+                auth=(Settings.LOKI_USER, Settings.LOKI_PASSWORD),
                 version="1"
             )
 

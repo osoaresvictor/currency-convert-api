@@ -1,15 +1,17 @@
 from fastapi import APIRouter, status, Depends, HTTPException, Header
-from datetime import datetime, UTC
-from typing import List
+from typing import List, Optional
 
 from starlette.responses import JSONResponse
 
-from schemas.currency_conversion_rates_schema import CurrencyConversionRatesSchema
-from schemas.currency_conversion_response_schema import CurrencyConversionResponseSchema
-from services.currency_converter_service import CurrencyConverterService
-from repositories.currency_conversions_repository import CurrencyConversionsRepository
-from core.database import Database
-from core.utils import Utils
+from app.api_clients.exchange_rates_api_client import ExchangeRatesApiClient
+from app.core.cache import RedisCache
+from app.exceptions.currency_code_doesnt_exist_exception import CurrencyCodeDoesntExist
+from app.exceptions.invalid_currency_code_exception import InvalidCurrencyException
+from app.models.currency_conversions_model import CurrencyConversionsModel
+from app.schemas.currency_conversion_response_schema import CurrencyConversionResponseSchema
+from app.services.currency_converter_service import CurrencyConverterService
+from app.repositories.currency_conversions_repository import CurrencyConversionsRepository
+from app.core.database import Database
 
 router = APIRouter()
 
@@ -20,13 +22,21 @@ router = APIRouter()
     description="List all currency conversions performed according to the \
                                                             user_id entered"
 )
-async def get_conversions(
+async def get_conversions_by_user_id(
     user_id: str,
-    db: Database = Depends(Database)
+    db: Database = Depends(Database),
+    redis_cache: RedisCache = Depends(RedisCache),
+    exchange_rates_api_client: ExchangeRatesApiClient = Depends(
+        ExchangeRatesApiClient)
 ):
-    repository = CurrencyConversionsRepository(db.session())
-    result = repository.get_conversions_by_user(user_id)
+    service = CurrencyConverterService(
+        redis_cache=redis_cache,
+        currency_conversions_repository=CurrencyConversionsRepository(
+            db.session()),
+        exchange_rates_api_client=exchange_rates_api_client
+    )
 
+    result = await service.get_conversions_by_user(user_id)
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -44,65 +54,49 @@ async def get_conversions(
     description="Performs conversion between two different currencies"
 )
 async def convert_currency(
-    source_currency: str,
+    source_currency_code: str,
     source_currency_value: float,
-    target_currency: str,
-    converter_service: CurrencyConverterService = Depends(CurrencyConverterService),
+    target_currency_code: str,
+    user_id: str = Header(str),
     db: Database = Depends(Database),
-    user_id: str = Header(str)
+    redis_cache: RedisCache = Depends(RedisCache),
+    exchange_rates_api_client: ExchangeRatesApiClient = Depends(
+        ExchangeRatesApiClient)
 ):
-    source_currency = source_currency.upper()
-    target_currency = target_currency.upper()
-
-    if not (
-        Utils.validate_currency_code_name(source_currency)
-        or Utils.validate_currency_code_name(target_currency)
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Currency code must be 3 characters long"
-        )
-
-    currency_rates: CurrencyConversionRatesSchema = \
-        await converter_service.fetch_conversion_rates(
-            source_currency, target_currency
-        )
-
-    for currency, rate in currency_rates.rates.items():
-        if not rate:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Currency '{currency}' rate not found"
-            )
-
-    rate_value: float = 0
-    try:
-        rate_value = currency_rates.rates[target_currency] / currency_rates.rates[source_currency]
-    except ZeroDivisionError:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Currency Conversion error, division by zero encountered "
-            f"('{source_currency}' = {currency_rates.rates[source_currency]})"
-        )
-
-    repository = CurrencyConversionsRepository(db.session())
-    currency_conversion_transaction = repository.add_currency_conversion(
-        user_id=user_id,
-        source_currency=source_currency,
-        source_currency_value=source_currency_value,
-        target_currency=target_currency,
-        rate_value=rate_value,
-        datetime=datetime.now(UTC)
+    service = CurrencyConverterService(
+        redis_cache=redis_cache,
+        currency_conversions_repository=CurrencyConversionsRepository(
+            db.session()),
+        exchange_rates_api_client=exchange_rates_api_client
     )
 
-    target_currency_value = source_currency_value * rate_value
+    transaction: CurrencyConversionsModel = Optional[CurrencyConversionsModel]
+    try:
+        transaction = await service.convert_currency_transaction(
+            source_currency_code=source_currency_code,
+            source_currency_value=source_currency_value,
+            target_currency_code=target_currency_code,
+            user_id=user_id
+        )
+    except InvalidCurrencyException as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except CurrencyCodeDoesntExist as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+
+    target_currency_value = source_currency_value * transaction.rate_value
     return CurrencyConversionResponseSchema(
-        transaction_id=currency_conversion_transaction.transaction_id,
-        user_id=currency_conversion_transaction.user_id,
-        source_currency=currency_conversion_transaction.source_currency,
-        source_currency_value=currency_conversion_transaction.source_currency_value,
-        target_currency=currency_conversion_transaction.target_currency,
+        transaction_id=transaction.transaction_id,
+        user_id=transaction.user_id,
+        source_currency_code=transaction.source_currency_code,
+        source_currency_value=transaction.source_currency_value,
+        target_currency_code=transaction.target_currency_code,
         target_currency_value=target_currency_value,
-        rate_value=rate_value,
-        datetime=currency_conversion_transaction.datetime
+        rate_value=transaction.rate_value,
+        datetime=transaction.datetime
     )
