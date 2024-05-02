@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from app.exceptions.invalid_currency_code_exception import InvalidCurrencyException
+from app.exceptions.invalid_currency_exception import InvalidCurrencyException
 
 
 class Utils:

@@ -1,4 +1,4 @@
-class CurrencyCodeDoesntExist(Exception):
+class CurrencyCodeDoesntExistException(Exception):
     """Raised when currency code does not exist
 
     Attributes:

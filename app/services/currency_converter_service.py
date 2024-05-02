@@ -4,8 +4,8 @@ from app.core.utils import Utils
 from app.core.cache import RedisCache
 from app.core.settings import Settings
 from app.core.logger import Logger
-from app.exceptions.currency_code_doesnt_exist_exception import CurrencyCodeDoesntExist
-from app.exceptions.invalid_currency_code_exception import InvalidCurrencyException
+from app.exceptions.currency_code_doesnt_exist_exception import CurrencyCodeDoesntExistException
+from app.exceptions.invalid_currency_exception import InvalidCurrencyException
 from app.models.currency_conversions_model import CurrencyConversionsModel
 from app.repositories.currency_conversions_repository import CurrencyConversionsRepository
 from app.api_clients.exchange_rates_api_client import ExchangeRatesApiClient
@@ -98,7 +98,7 @@ class CurrencyConverterService:
                     result_rate = all_conversion_rates.rates.get(
                         currency_code, None)
                     if result_rate is None:
-                        raise CurrencyCodeDoesntExist(
+                        raise CurrencyCodeDoesntExistException(
                             currency_code=currency_code)
 
                     result.rates[currency_code] = result_rate
