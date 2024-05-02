@@ -19,16 +19,16 @@ class CurrencyConverterService:
             exchange_rates_api_client: ExchangeRatesApiClient,
             currency_conversions_repository: CurrencyConversionsRepository
     ):
-        self.redis_cache = redis_cache
-        self.redis_rate_key_prefix = Settings.REDIS_RATE_KEY_PREFIX
-        self.exchange_rates_api_client = exchange_rates_api_client
-        self.currency_conversions_repository = currency_conversions_repository
+        self.__redis_cache = redis_cache
+        self.__redis_rate_key_prefix = Settings.REDIS_RATE_KEY_PREFIX
+        self.__exchange_rates_api_client = exchange_rates_api_client
+        self.__currency_conversions_repository = currency_conversions_repository
 
     async def get_conversions_by_user(
         self,
         user_id: str
     ) -> list[CurrencyConversionsModel | None]:
-        result = self.currency_conversions_repository.get_conversions_by_user(
+        result = self.__currency_conversions_repository.get_conversions_by_user(
             user_id)
         return result
 
@@ -42,7 +42,7 @@ class CurrencyConverterService:
         source_currency_code = source_currency_code.upper()
         target_currency_code = target_currency_code.upper()
 
-        Utils.validate_currency(source_currency_code, source_currency_value)
+        Utils.validate_currency(source_currency_code)
         Utils.validate_currency(target_currency_code)
 
         currency_rates = await self.__fetch_all_conversion_rates(
@@ -63,7 +63,7 @@ class CurrencyConverterService:
                 source_currency_code, source_currency_rate)
 
         currency_conversion_transaction = \
-            self.currency_conversions_repository.add_currency_conversion(
+            self.__currency_conversions_repository.add_currency_conversion(
                 user_id=user_id,
                 source_currency_code=source_currency_code,
                 source_currency_value=source_currency_value,
@@ -85,15 +85,15 @@ class CurrencyConverterService:
         all_conversion_rates: Optional[CurrencyConversionRatesSchema] = None
 
         for currency_code in currency_codes:
-            cache_value = await self.redis_cache.get(
-                f'{self.redis_rate_key_prefix}{currency_code}'
+            cache_value = await self.__redis_cache.get(
+                f'{self.__redis_rate_key_prefix}{currency_code}'
             )
 
             if cache_value:
                 result.rates[currency_code] = float(cache_value)
             else:
                 if all_conversion_rates is None:
-                    all_conversion_rates = self.exchange_rates_api_client.fetch_all_conversion_rates()
+                    all_conversion_rates = self.__exchange_rates_api_client.fetch_all_conversion_rates()
 
                     result_rate = all_conversion_rates.rates.get(
                         currency_code, None)
@@ -114,8 +114,8 @@ class CurrencyConverterService:
 
         exp_seconds = Utils.seconds_until_next_day()
         for code, rate_value in conversion_rates.rates.items():
-            is_success = await self.redis_cache.set(
-                key=f'{self.redis_rate_key_prefix}{code}',
+            is_success = await self.__redis_cache.set(
+                key=f'{self.__redis_rate_key_prefix}{code}',
                 value=rate_value,
                 exp_seconds=int(exp_seconds)
             )
