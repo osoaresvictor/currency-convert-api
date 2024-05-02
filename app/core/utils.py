@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 
+from app.exceptions.invalid_currency_code_exception import InvalidCurrencyException
+
 
 class Utils:
     @staticmethod
@@ -9,6 +11,9 @@ class Utils:
         return int((next_day - now).total_seconds())
 
     @staticmethod
-    def validate_currency_code_name(currency_name: str):
-        is_valid_currency = len(currency_name) == 3 and currency_name.isdigit() is False
-        return True if is_valid_currency else False
+    def validate_currency(currency_code: str, currency_rate: float | None = None):
+        if type(currency_rate) is float and currency_rate <= 0:
+            raise InvalidCurrencyException(currency_code=currency_code)
+
+        if len(currency_code) != 3 or currency_code.isalpha() is False:
+            raise InvalidCurrencyException(currency_code=currency_code)
