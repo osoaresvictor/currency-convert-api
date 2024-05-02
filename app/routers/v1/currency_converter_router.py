@@ -1,12 +1,11 @@
 from fastapi import APIRouter, status, Depends, HTTPException, Header
 from typing import List, Optional
-
 from starlette.responses import JSONResponse
 
 from app.api_clients.exchange_rates_api_client import ExchangeRatesApiClient
 from app.core.cache import RedisCache
-from app.exceptions.currency_code_doesnt_exist_exception import CurrencyCodeDoesntExist
-from app.exceptions.invalid_currency_code_exception import InvalidCurrencyException
+from app.exceptions.currency_code_doesnt_exist_exception import CurrencyCodeDoesntExistException
+from app.exceptions.invalid_currency_exception import InvalidCurrencyException
 from app.models.currency_conversions_model import CurrencyConversionsModel
 from app.schemas.currency_conversion_response_schema import CurrencyConversionResponseSchema
 from app.services.currency_converter_service import CurrencyConverterService
@@ -63,6 +62,12 @@ async def convert_currency(
     exchange_rates_api_client: ExchangeRatesApiClient = Depends(
         ExchangeRatesApiClient)
 ):
+    if source_currency_value < 0.1:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="The minimum allowed value is 0.1"
+        )
+
     service = CurrencyConverterService(
         redis_cache=redis_cache,
         currency_conversions_repository=CurrencyConversionsRepository(
@@ -70,7 +75,7 @@ async def convert_currency(
         exchange_rates_api_client=exchange_rates_api_client
     )
 
-    transaction: CurrencyConversionsModel = Optional[CurrencyConversionsModel]
+    transaction: Optional[CurrencyConversionsModel] = None
     try:
         transaction = await service.convert_currency_transaction(
             source_currency_code=source_currency_code,
@@ -83,7 +88,7 @@ async def convert_currency(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
-    except CurrencyCodeDoesntExist as e:
+    except CurrencyCodeDoesntExistException as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)

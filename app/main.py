@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
 
-from app.controller.routes import api_router
+from app.routers.routes import api_router
 from app.core.database import Base, Database
 from fastapi import FastAPI
 
