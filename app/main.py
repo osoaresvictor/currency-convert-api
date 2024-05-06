@@ -21,7 +21,8 @@ app = FastAPI(
         "name": "Victor Soares",
         "email": "victor_soares@live.com",
         "url": "https://www.linkedin.com/in/soares-victor-it/"
-    }
+    },
+    root_path="/api"
 )
 app.include_router(api_router, prefix="/currencyConverter")
 app.middleware("http")(log_requests)

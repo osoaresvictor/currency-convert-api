@@ -44,6 +44,22 @@ services:
       - "3000:3000"
     networks:
       - productionNetwork
+    environment:
+    - GF_SERVER_ROOT_URL=https://currency-converter-api-victor-soares-4de6f54a.koyeb.app/grafana/ # change this to `http://localhost:3000/grafana/` if you run local 
+    - GF_SERVER_SERVE_FROM_SUB_PATH=true
+
+  # specially because Koyeb just works with one http port exposed
+  nginx:
+    image: nginx:1.26.0
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - productionNetwork
+    depends_on:
+      - fastapi
+      - grafana
 
 networks:
   productionNetwork:
