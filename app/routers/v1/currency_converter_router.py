@@ -18,8 +18,10 @@ router = APIRouter()
 @router.get(
     "/conversions",
     response_model=List[CurrencyConversionResponseSchema],
-    description="List all currency conversions performed according to the \
-                                                            user_id entered"
+    summary="Get all currency conversions",
+    description="List all currency conversions performed. It's possible \
+                                                   filter by `user_id` header.",
+    tags=["Currency Converter"]
 )
 async def get_conversions_by_user_id(
     user_id: str,
@@ -50,7 +52,10 @@ async def get_conversions_by_user_id(
 @router.post(
     "/convert",
     response_model=CurrencyConversionResponseSchema,
-    description="Performs conversion between two different currencies"
+    summary="Performs conversion between two different currencies",
+    description="Enter the `source_currency_code` and `source_currency_value` \
+                         and `target_currency_code` to perform the conversion.",
+    tags=["Currency Converter"]
 )
 async def convert_currency(
     source_currency_code: str,
