@@ -1,9 +1,13 @@
-from app.core.settings import Settings
+from typing import Optional, Union
+
+import redis
+
 from app.core.logger import Logger
-import redis.asyncio as redis
+from app.core.settings import Settings
+from app.core.singleton import SingletonMeta
 
 
-class RedisCache:
+class Cache(metaclass=SingletonMeta):
     def __init__(self):
         self.__host = Settings.REDIS_HOST
         self.__port = Settings.REDIS_PORT
@@ -14,19 +18,34 @@ class RedisCache:
             port=self.__port,
             db=self.__db
         )
-        self.connection = redis.Redis(connection_pool=pool)
+        self.__connection = redis.Redis(connection_pool=pool)
 
-    async def set(self, key, value, exp_seconds=None):
+    @classmethod
+    def get_cache(cls):
+        return cls()
+
+    def set(
+            self,
+            key: str,
+            value: Union[str, bytes],
+            exp_seconds: Optional[int] = None
+    ) -> bool:
         try:
-            await self.connection.set(name=key, value=value, ex=exp_seconds)
+            self.__connection.set(name=key, value=value, ex=exp_seconds)
+            return True
         except redis.RedisError as e:
             Logger.error(f"Redis error: {e}")
             return False
-        return True
 
-    async def get(self, key):
+    def get(self, key: str) -> Optional[bytes]:
         try:
-            return await self.connection.get(key)
+            return self.__connection.get(key)
         except redis.RedisError as e:
             Logger.error(f"Redis error: {e}")
             return None
+
+    def flush_all(self):
+        try:
+            return self.__connection.flushall()
+        except redis.RedisError as e:
+            Logger.error(f"Redis error: {e}")

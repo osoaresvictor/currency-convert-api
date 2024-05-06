@@ -7,7 +7,8 @@ class Utils:
     @staticmethod
     def seconds_until_next_day() -> int:
         now = datetime.now()
-        next_day = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        next_day = (now + timedelta(days=1)).replace(hour=0,
+                                                     minute=0, second=0, microsecond=0)
         return int((next_day - now).total_seconds())
 
     @staticmethod

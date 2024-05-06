@@ -1,9 +1,11 @@
-from pybreaker import CircuitBreakerError
 import requests
+from pybreaker import CircuitBreakerError
+
 from app.core.http_circuit_breaker import HttpCircuitBreaker
 from app.core.logger import Logger
-from app.schemas.currency_conversion_rates_schema import CurrencyConversionRatesSchema
 from app.core.settings import Settings
+from app.schemas.currency_conversion_rates_schema import \
+    CurrencyConversionRatesSchema
 
 
 class ExchangeRatesApiClient:

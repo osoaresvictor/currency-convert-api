@@ -3,11 +3,11 @@ load_dotenv()
 
 from app.routers.routes import api_router
 from app.core.log_requets_midleware import log_requests
+from app.core.database import Database
 from fastapi import FastAPI
 
 
-db = Database()
-Base.metadata.create_all(bind=db.engine)
+db = Database().init_db()
 
 app = FastAPI(
     title="Currency Converter API",

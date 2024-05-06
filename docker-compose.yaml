@@ -28,7 +28,7 @@ services:
       - "6379:6379"
     networks:
       - productionNetwork
-  
+
   loki:
     image: grafana/loki:3.0.0
     ports:
