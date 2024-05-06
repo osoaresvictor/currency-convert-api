@@ -9,3 +9,4 @@ Requests==2.31.0
 SQLAlchemy==2.0.29
 starlette==0.37.2
 uvicorn==0.29.0
+pre-commit==3.7.0
