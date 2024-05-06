@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from app.routers.routes import api_router
-from app.core.database import Base, Database
+from app.core.log_requets_midleware import log_requests
 from fastapi import FastAPI
 
 
@@ -15,6 +15,7 @@ app = FastAPI(
     description="A simple REST API to convert currencies"
 )
 app.include_router(api_router, prefix="/currencyConverter")
+app.middleware("http")(log_requests)
 
 
 @app.get("/healthcheck", description="Just a server Health-Check")

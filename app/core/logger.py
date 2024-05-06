@@ -1,7 +1,10 @@
 import logging
+from multiprocessing import Queue
+
 import logging_loki
-from app.core.singleton import SingletonMeta
+
 from app.core.settings import Settings
+from app.core.singleton import SingletonMeta
 
 
 class Logger(metaclass=SingletonMeta):
@@ -10,19 +13,17 @@ class Logger(metaclass=SingletonMeta):
     @classmethod
     def _initialize_logger(cls):
         if not cls._logger_initialized:
-            cls.logger = logging.getLogger()
-            cls.logger.handlers.clear()
-            cls.logger.propagate = False
-            cls.logger.setLevel(logging.INFO)
-
-            handler = logging_loki.LokiHandler(
+            handler = logging_loki.LokiQueueHandler(
+                Queue(-1),
                 url=f"{Settings.LOKI_URL}/loki/api/v1/push",
-                tags={"application": "my-app"},
+                tags={"application": "currency-converter-api-app"},
                 auth=(Settings.LOKI_USER, Settings.LOKI_PASSWORD),
                 version="1"
             )
 
+            cls.logger = logging.getLogger()
             cls.logger.addHandler(handler)
+            cls.logger.setLevel(logging.INFO)
             cls._logger_initialized = True
 
     @classmethod
