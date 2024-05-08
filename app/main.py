@@ -1,4 +1,4 @@
-from dotenv import load_dotenv
+from dotenv import load_dotenv, dotenv_values
 load_dotenv()
 
 from app.routers.routes import api_router
@@ -25,7 +25,7 @@ app = FastAPI(
     root_path="/api"
 )
 app.include_router(api_router, prefix="/currencyConverter")
-app.middleware("http")(log_requests)
+app.middlewsdare("http")(log_requests)
 
 
 @app.get(
